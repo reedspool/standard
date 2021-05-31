@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const fetch = require("node-fetch");
 const { Cluster } = require('puppeteer-cluster');
 const markdownLinkExtractor = require('markdown-link-extractor');
 const glob = require("glob");
@@ -39,7 +40,7 @@ async function main() {
     // Define the only task for this cluster, whose input is a URL to check
     await cluster.task(async ({ page, data: url }) => page.goto(url));
 
-    let countLinks = 0;
+    let countAllLinks = 0;
     let countErrors = 0;
     let countFiles = 1;
 
@@ -47,26 +48,17 @@ async function main() {
     const checks = files.map(async (file) => {
         const markdown = await readFile(file, { encoding: "utf8" });
         const links = markdownLinkExtractor(markdown, true);
-        console.log(`debug: ${stripRoot(file)} links.length (1): ${links.length}`);
-        const checks = links.map(async ({ href }) => {
-            try {
-                const response = await cluster.execute(href);
-                return { status: response.status(), href };
-            } catch (error) {
-                return { error, href };
-            }
-        });
+        const countFileLinks = links.length;
+        countAllLinks += countFileLinks;
+        const checkFileLink = checkLink(cluster, stripRoot(file));
+        const checks = links.map(checkFileLink);
 
         // Wait for all checks from file to complete before reporting on it
         const completeChecks = await Promise.allSettled(checks);
 
-        countLinks += links.length;
-
-        console.log(`debug: ${stripRoot(file)} links.length (2): ${links.length}`);
-        console.log(`\n    ${countFiles++}) ${stripRoot(file)} has ${links.length} links:`);
+        console.log(`\n    ${countFiles++}) ${stripRoot(file)} has ${countFileLinks} links:`);
         completeChecks.forEach(({ value: { error, status, href } }) => {
             if (error) countErrors++;
-
             console.log(`        - ${error || status}: ${href}`);
         });
     });
@@ -76,8 +68,8 @@ async function main() {
 
     console.log(separator);
     console.log(
-        `Complete, counted ${countLinks} links in ${results.length} pages.
-         ${countErrors} of ${countLinks} links resulted in errors.`);
+        `Complete, counted ${countAllLinks} links in ${results.length} pages.
+         ${countErrors} of ${countAllLinks} links resulted in errors.`);
     process.exit(0);
 }
 
@@ -90,6 +82,39 @@ const getFiles = (pattern) => new Promise((resolve, reject) => {
 });
 
 const stripRoot = (path) => path.replace(new RegExp(`^${root}\\/`), "");
+
+const checkLink = (cluster, file) => async ({ href }) => {
+
+    // If this is not a fully qualified URL, treat it like a relative path
+    // within this directory
+    if (! /^https?:\/\//.test(href))
+        href = githubUrlFromPath(resolveRelativePath(file, href));
+
+    // First try puppeteer page nav, which throws if it fails
+    try {
+        const response = await cluster.execute(href);
+        return { status: response.status(), href };
+    } catch (error) {
+        // return { error, href };
+        // Puppeteer nav can fail for a variety of reasons. Try again with
+        // a header check
+        const { ok, status } = await fetch(href);
+        return { status: status, href };
+    }
+};
+
+// E.g. from: 'build_process/managing-node-with-brew.md', to: './node.md'
+//      returns build_process/./node.md
+const resolveRelativePath = (from, to) => {
+    const dir = from.replace(/\/?[^/]+$/, "");
+    return `${dir}/${to}`;
+}
+
+const githubUrlFromPath = (path) => {
+    const repo = process.env.GITHUB_REPOSITORY;
+    const sha = process.env.GITHUB_SHA;
+    return `https://github.com/${repo}/blob/${sha}/${path}`;
+}
 
 // Start the async entrypoint
 main();
