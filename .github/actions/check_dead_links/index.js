@@ -40,12 +40,18 @@ async function main() {
     });
 
     let countLinks = 0;
+    let countFiles = 1;
     const checks = files.map((file) =>
         readFile(file, { encoding: "utf8" })
             .then(checkFileForDeadLinks(cluster))
             .then((links) => {
                 countLinks += links.length;
-                return { file, links };
+
+                links.forEach(({ status }))
+                console.log(`\n    ${countFiles++}) ${stripRoot(file)}:`);
+                links.forEach(({ error, status, href }) => {
+                    console.log(`        - ${error || status}: ${href}`);
+                });
             }));
 
     // Wait for everything to complete.
@@ -53,13 +59,6 @@ async function main() {
 
     console.log(separator);
     console.log(`Results complete, counted ${countLinks} links in ${results.length} pages.`)
-
-    results.forEach(({ file, links }, index) => {
-        console.log(`\n    ${index + 1}) ${stripRoot(file)}:`);
-        links.forEach(( link ) => {
-            console.log(`        - ${link.status}: ${link.href}`);
-        });
-    });
 }
 
 const getAllMarkdownFiles = (pattern) => new Promise((resolve, reject) => {
@@ -77,8 +76,8 @@ const checkFileForDeadLinks = (cluster) => (markdown) => {
     const links = markdownLinkExtractor(markdown, true);
     const checks = links.map(({ href }) =>
         cluster.execute(href)
-            .then(response => ({ status: response.status() }))
-            .catch(error => ({ error })));
+            .then(response => ({ status: response.status(), href }))
+            .catch(error => ({ error, href })));
     return Promise.all(checks);
 };
 
