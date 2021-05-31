@@ -82,7 +82,7 @@ async function main() {
     asciiTable.setHeading("HTTP", "Link", "File");
 
     allErrors.forEach(({ status, original, file }) => {
-        const row = [ status, original, stripRoot(file) ]
+        const row = [ status, summarizeLink(original), stripRoot(file) ]
         asciiTable.addRow(...row);
     })
 
@@ -137,6 +137,21 @@ const githubUrlFromPath = (path) => {
     const repo = process.env.GITHUB_REPOSITORY;
     const sha = process.env.GITHUB_SHA;
     return `https://github.com/${repo}/blob/${sha}/${path}`;
+}
+
+// Pick a pretty separator for overly long strings
+const summaryEllipsis = "...    ...";
+// Base the max size off a good looking string.
+const summaryLinkMaxLength =
+    ("https://d2mxu07" + summaryEllipsis + "+at+2.24.55+PM.png").length;
+
+const summarizeLink = (link) => {
+    const len = link.length;
+    if (len <= summaryLinkMaxLength) return link;
+    const half = (summaryLinkMaxLength - summaryEllipsis.length) / 2;
+
+    // "head of the original link" + "..." + "tail of the original link";
+    return link.subString(0, half) + summaryEllipsis + link.subString(len - half, len);
 }
 
 // Start the async entrypoint
