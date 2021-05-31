@@ -70,19 +70,7 @@ const checkFileForDeadLinks = (cluster) => (markdown) => {
     return Promise.all(checks);
 };
 
-const checkMarkdownLinkLivenessInPuppeteer = (link) => {
-
-}
-
 const stripRoot = (path) => path.replace(new RegExp(`^${root}`), "");
-
-
-const puppeteerStart = () => {
-    const browser = await puppeteer.launch();
-    // --no-sandbox from docker image docs:
-    // https://github.com/ianwalter/puppeteer-container
-    const page = browser.launch({ args: ['--no-sandbox'] });
-}
 
 // Start the async entrypoint
 main();
