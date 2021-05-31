@@ -5,8 +5,10 @@ const markdownLinkExtractor = require('markdown-link-extractor');
 const glob = require("glob");
 const { promises: { readFile } } = require("fs");
 const root = process.env.GITHUB_WORKSPACE;
-const clusterMaxConcurrent = 5;
 const separator = "\n--------------------------------------------------\n";
+
+// Raise to go faster, limited only by the github action hardware.
+const clusterMaxConcurrent = 10;
 
 process.on("unhandledRejection", error => {
     console.log("EXITING on unhandled promise rejection:", error);
@@ -17,9 +19,9 @@ process.on("unhandledRejection", error => {
 async function main() {
 
     console.log(separator);
-    console.log(`Searching ${root} for markdown files`);
+    console.log(`Searching ${root} for markdown files...`);
     const files = await getAllMarkdownFiles(`${root}/**/*.md`);
-    console.log(`All Markdown files:\n${files.map(stripRoot).join("\n")}`);
+    console.log(`Found ${files.length} markdown files.`);
     console.log(separator);
 
     console.log(
@@ -39,11 +41,15 @@ async function main() {
       return page.goto(url);
     });
 
+    // close the checker over a cluster for it to work with
+    const checker = checkFileForDeadLinks(cluster);
+
     let countLinks = 0;
     let countFiles = 1;
+
     const checks = files.map((file) =>
         readFile(file, { encoding: "utf8" })
-            .then(checkFileForDeadLinks(cluster))
+            .then(checker)
             .then((links) => {
                 countLinks += links.length;
 
@@ -81,7 +87,7 @@ const checkFileForDeadLinks = (cluster) => (markdown) => {
     return Promise.all(checks);
 };
 
-const stripRoot = (path) => path.replace(new RegExp(`^${root}`), "");
+const stripRoot = (path) => path.replace(new RegExp(`^${root}\\/`), "");
 
 // Start the async entrypoint
 main();
