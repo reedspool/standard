@@ -7,6 +7,8 @@ const glob = require("glob");
 const { promises: { readFile } } = require("fs");
 const root = process.env.GITHUB_WORKSPACE;
 const separator = "\n--------------------------------------------------\n";
+var AsciiTable = require("ascii-table");
+
 
 // Raise to go faster, limited only by the github action hardware.
 const clusterMaxConcurrent = 10;
@@ -57,6 +59,7 @@ async function main() {
         const completeChecks = await Promise.allSettled(checks);
 
         console.log(`\n    ${countFiles++}) ${stripRoot(file)} has ${countFileLinks} links:`);
+
         completeChecks.forEach(({ value: { status, original } }) => {
             if (status < 200 || status >= 300) {
                 // Red colored unicode "x"
@@ -71,14 +74,23 @@ async function main() {
     // Wait for everything to complete.
     const results = await Promise.allSettled(checks);
 
+    /** Summary **/
+    console.log(`\nSummary of errors:`);
+
+    const asciiTable = new AsciiTable();
+
+    asciiTable.setHeading("HTTP", "Link", "File");
+
+    allErrors.forEach(({ status, original, file }) => {
+        const row = [ status, original, stripRoot(file) ]
+        asciiTable.addRow(...row);
+    })
+
+    console.log(asciiTable.toString());
     console.log(separator);
     console.log(
         `Complete, counted ${countAllLinks} links in ${results.length} pages.
          ${allErrors.length} of ${countAllLinks} links resulted in errors.`);
-    console.log(`\nSummary of errors:`);
-    allErrors.forEach(({ status, original, file }) => {
-        console.log(`    - Got ${status} checking ${original} from ${file}`);
-    })
     process.exit(0);
 }
 
