@@ -8,6 +8,12 @@ const root = process.env.GITHUB_WORKSPACE;
 const clusterMaxConcurrent = 2;
 const separator = "\n--------------------------------------------------\n";
 
+process.on("unhandledRejection", error => {
+    console.log("EXITING on unhandled promise rejection:", error);
+    process.exit(1);
+});
+
+
 async function main() {
 
     console.log(separator);
@@ -22,6 +28,9 @@ async function main() {
     const cluster = await Cluster.launch({
         concurrency: Cluster.CONCURRENCY_BROWSER,
         maxConcurrency: clusterMaxConcurrent,
+
+        // args passed to puppeteer browser.launch()
+        // --no-sandbox required when running as root, which Docker does
         args: ['--no-sandbox']
     });
 
