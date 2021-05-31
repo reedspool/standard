@@ -151,7 +151,7 @@ const summarizeLink = (link) => {
     const half = (summaryLinkMaxLength - summaryEllipsis.length) / 2;
 
     // "head of the original link" + "..." + "tail of the original link";
-    return link.subString(0, half) + summaryEllipsis + link.subString(len - half, len);
+    return link.substring(0, half) + summaryEllipsis + link.substring(len - half);
 }
 
 // Start the async entrypoint
