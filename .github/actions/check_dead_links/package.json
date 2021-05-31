@@ -1,0 +1,14 @@
+{
+  "name": "check-dead-links.git",
+  "version": "1.0.0",
+  "description": "This action checks all markdown files in a repository for dead links.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "glob": "^7.1.7"
+  }
+}
