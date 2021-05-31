@@ -5,7 +5,7 @@ const markdownLinkExtractor = require('markdown-link-extractor');
 const glob = require("glob");
 const { promises: { readFile } } = require("fs");
 const root = process.env.GITHUB_WORKSPACE;
-const clusterMaxConcurrent = 2;
+const clusterMaxConcurrent = 5;
 const separator = "\n--------------------------------------------------\n";
 
 process.on("unhandledRejection", error => {
@@ -75,7 +75,10 @@ const getAllMarkdownFiles = (pattern) => new Promise((resolve, reject) => {
 
 const checkFileForDeadLinks = (cluster) => (markdown) => {
     const links = markdownLinkExtractor(markdown, true);
-    const checks = links.map(({ href }) => cluster.execute(href));
+    const checks = links.map(({ href }) =>
+        cluster.execute(href)
+            .then(response => ({ status: response.status() }))
+            .catch(error => ({ error })));
     return Promise.all(checks);
 };
 
