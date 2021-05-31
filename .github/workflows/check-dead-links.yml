@@ -1,0 +1,10 @@
+name: CI
+on: [push]
+jobs:
+  check_dead_links:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Check dead links in markdown files
+        uses: .github/actions/check_dead_links
