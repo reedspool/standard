@@ -41,8 +41,8 @@ async function main() {
     await cluster.task(async ({ page, data: url }) => page.goto(url));
 
     let countAllLinks = 0;
-    let countErrors = 0;
     let countFiles = 1;
+    const allErrors = [];
 
     console.log(`Starting link checking`)
     const checks = files.map(async (file) => {
@@ -60,8 +60,8 @@ async function main() {
         completeChecks.forEach(({ value: { status, original } }) => {
             if (status < 200 || status >= 300) {
                 // Red colored unicode "x"
-                countErrors++;
                 console.log(`        - [\x1b[31m✖\x1b[0m] ${status}: ${original}`);
+                allErrors.push({ status, original, file });
             } else {
                 console.log(`        - [✓] ${status}: ${original}`);
             }
@@ -74,7 +74,11 @@ async function main() {
     console.log(separator);
     console.log(
         `Complete, counted ${countAllLinks} links in ${results.length} pages.
-         ${countErrors} of ${countAllLinks} links resulted in errors.`);
+         ${allErrors.length} of ${countAllLinks} links resulted in errors.`);
+    console.log(`\nSummary of errors:`);
+    allErrors.forEach(({ status, original, file }) => {
+        console.log("    - Got ${status} checking ${original} from ${file}");
+    })
     process.exit(0);
 }
 
