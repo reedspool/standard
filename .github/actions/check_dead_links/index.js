@@ -3,8 +3,7 @@
 const { Cluster } = require('puppeteer-cluster');
 const markdownLinkExtractor = require('markdown-link-extractor');
 const glob = require("glob");
-const { fsPromises } = require("fs");
-const { readFile } = fsPromises;
+const { promises: { readFile } } = require("fs");
 const root = process.env.GITHUB_WORKSPACE;
 const clusterMaxConcurrent = 2;
 const separator = "\n--------------------------------------------------\n";
