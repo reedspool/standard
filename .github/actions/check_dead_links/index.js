@@ -59,11 +59,11 @@ async function main() {
         console.log(`\n    ${countFiles++}) ${stripRoot(file)} has ${countFileLinks} links:`);
         completeChecks.forEach(({ value: { status, original } }) => {
             if (status < 200 || status >= 300) {
+                // Red colored unicode "x"
+                console.log(`        - [\x1b[31m✖\x1b[0m] ${status}: ${original}`);
+            } else {
                 countErrors++;
                 console.log(`        - [✓] ${status}: ${original}`);
-            } else {
-                // Red colored unicode "x"
-                console.log(`        - [\x1b[31m✖\x1b[0m'] ${status}: ${original}`);
             }
         });
     });
