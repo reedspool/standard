@@ -45,6 +45,7 @@ async function main() {
     const checker = checkFileForDeadLinks(cluster);
 
     let countLinks = 0;
+    let countErrors = 0;
     let countFiles = 1;
 
     const checks = files.map((file) =>
@@ -55,6 +56,8 @@ async function main() {
 
                 console.log(`\n    ${countFiles++}) ${stripRoot(file)} has ${links.length} links:`);
                 links.forEach(({ error, status, href }) => {
+                    if (error) countErrors++;
+
                     console.log(`        - ${error || status}: ${href}`);
                 });
             }));
@@ -63,7 +66,10 @@ async function main() {
     const results = await Promise.all(checks);
 
     console.log(separator);
-    console.log(`Results complete, counted ${countLinks} links in ${results.length} pages.`)
+    console.log(
+        `Complete, counted ${countLinks} links in ${results.length} pages.
+         ${countErrors} of ${countLinks} links resulted in errors.`);
+    console.log(``);
     process.exit(0);
 }
 
