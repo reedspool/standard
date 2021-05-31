@@ -8,3 +8,4 @@ jobs:
         uses: actions/checkout@v2
       - name: Check dead links in markdown files
         uses: .github/actions/check_dead_links
+        id: checkdeadlinks
