@@ -57,9 +57,14 @@ async function main() {
         const completeChecks = await Promise.allSettled(checks);
 
         console.log(`\n    ${countFiles++}) ${stripRoot(file)} has ${countFileLinks} links:`);
-        completeChecks.forEach(({ value: { error, status, href } }) => {
-            if (error) countErrors++;
-            console.log(`        - ${error || status}: ${href}`);
+        completeChecks.forEach(({ value: { status, original } }) => {
+            if (status < 200 || status >= 300) {
+                countErrors++;
+                console.log(`        - [✓] ${status}: ${original}`);
+            } else {
+                // Red colored unicode "x"
+                console.log(`        - [\x1b[31m✖\x1b[0m'] ${status}: ${original}`);
+            }
         });
     });
 
@@ -84,30 +89,32 @@ const getFiles = (pattern) => new Promise((resolve, reject) => {
 const stripRoot = (path) => path.replace(new RegExp(`^${root}\\/`), "");
 
 const checkLink = (cluster, file) => async ({ href }) => {
-
+    const original = href;
     // If this is not a fully qualified URL, treat it like a relative path
     // within this directory
     if (! /^https?:\/\//.test(href))
-        href = githubUrlFromPath(resolveRelativePath(file, href));
+        href = githubUrlFromPath(resolvePath(file, href));
 
     // First try puppeteer page nav, which throws if it fails
     try {
         const response = await cluster.execute(href);
-        return { status: response.status(), href };
+        return { status: response.status(), original };
     } catch (error) {
-        // return { error, href };
         // Puppeteer nav can fail for a variety of reasons. Try again with
-        // a header check
-        const { ok, status } = await fetch(href);
-        return { status: status, href };
+        // a HEAD check
+        const { ok, status } = await fetch(href, { method: "HEAD" });
+        return { status: status, original };
     }
 };
 
 // E.g. from: 'build_process/managing-node-with-brew.md', to: './node.md'
 //      returns build_process/./node.md
-const resolveRelativePath = (from, to) => {
-    const dir = from.replace(/\/?[^/]+$/, "");
-    return `${dir}/${to}`;
+const resolvePath = (from, to) => {
+    // If "to" is absolute (starts with "/"), just use that
+    if (/^\//.test(to)) return to;
+
+    // Replace the last "/.*" path segment with the given relative one.
+    return from.replace(/\/?[^/]+$/, `/${to}`);
 }
 
 const githubUrlFromPath = (path) => {
