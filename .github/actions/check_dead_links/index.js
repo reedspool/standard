@@ -77,7 +77,7 @@ async function main() {
          ${allErrors.length} of ${countAllLinks} links resulted in errors.`);
     console.log(`\nSummary of errors:`);
     allErrors.forEach(({ status, original, file }) => {
-        console.log("    - Got ${status} checking ${original} from ${file}");
+        console.log(`    - Got ${status} checking ${original} from ${file}`);
     })
     process.exit(0);
 }
