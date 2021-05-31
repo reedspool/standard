@@ -22,6 +22,7 @@ async function main() {
     const cluster = await Cluster.launch({
         concurrency: Cluster.CONCURRENCY_BROWSER,
         maxConcurrency: clusterMaxConcurrent,
+        args: ['--no-sandbox']
     });
 
     // Define the only task for this cluster, whose input is a URL to check
