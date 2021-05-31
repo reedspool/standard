@@ -62,7 +62,7 @@ async function main() {
         countLinks += links.length;
 
         console.log(`\n    ${countFiles++}) ${stripRoot(file)} has ${links.length} links:`);
-        completeChecks.forEach(({ error, status, href }) => {
+        completeChecks.forEach(({ value: { error, status, href } }) => {
             if (error) countErrors++;
 
             console.log(`        - ${error || status}: ${href}`);
