@@ -47,6 +47,7 @@ async function main() {
     const checks = files.map(async (file) => {
         const markdown = await readFile(file, { encoding: "utf8" });
         const links = markdownLinkExtractor(markdown, true);
+        console.log(`debug: ${stripRoot(file)} links.length (1): ${links.length}`);
         const checks = links.map(async ({ href }) => {
             try {
                 const response = await cluster.execute(href);
@@ -61,6 +62,7 @@ async function main() {
 
         countLinks += links.length;
 
+        console.log(`debug: ${stripRoot(file)} links.length (2): ${links.length}`);
         console.log(`\n    ${countFiles++}) ${stripRoot(file)} has ${links.length} links:`);
         completeChecks.forEach(({ value: { error, status, href } }) => {
             if (error) countErrors++;
