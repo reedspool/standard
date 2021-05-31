@@ -59,6 +59,7 @@ async function main() {
 
     console.log(separator);
     console.log(`Results complete, counted ${countLinks} links in ${results.length} pages.`)
+    process.exit(0);
 }
 
 const getAllMarkdownFiles = (pattern) => new Promise((resolve, reject) => {
