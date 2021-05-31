@@ -47,8 +47,7 @@ async function main() {
             .then((links) => {
                 countLinks += links.length;
 
-                links.forEach(({ status }))
-                console.log(`\n    ${countFiles++}) ${stripRoot(file)}:`);
+                console.log(`\n    ${countFiles++}) ${stripRoot(file)} has ${links.length} links:`);
                 links.forEach(({ error, status, href }) => {
                     console.log(`        - ${error || status}: ${href}`);
                 });
