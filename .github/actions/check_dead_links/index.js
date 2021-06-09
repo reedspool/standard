@@ -145,7 +145,7 @@ const checkLink = (cluster, file) => async ({ href }) => {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"
         }
     });
-    return { status, original, error };
+    return { status, original, error, file };
 };
 
 // E.g. from: 'build_process/managing-node-with-brew.md', to: './node.md'
