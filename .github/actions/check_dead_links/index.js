@@ -14,7 +14,7 @@ const redX = "\x1b[31m✖\x1b[0m"; // Red-colored unicode "x"
 
 
 // Raise to go faster, limited only by the github action hardware.
-const clusterMaxConcurrent = 10;
+const clusterMaxConcurrent = 20;
 
 process.on("unhandledRejection", error => {
     console.log("EXITING on unhandled promise rejection:", error);
@@ -126,7 +126,7 @@ const checkLink = (cluster, file) => async ({ href }) => {
     // First try puppeteer page nav, which throws if it fails
     try {
         const response = await cluster.execute(href);
-        return { status: response.status(), original };
+        return { status: response.status(), original, file };
     } catch (puppeteerError) {
         // Do nothing, proceed with the fetch test
         error = puppeteerError;
