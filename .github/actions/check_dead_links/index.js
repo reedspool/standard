@@ -114,18 +114,18 @@ const getFiles = (pattern) => new Promise((resolve, reject) => {
 const stripRoot = (path) => path.replace(new RegExp(`^${root}\\/`), "");
 
 // Use the actual Internet to check if the given URL works.
-const checkLink = (cluster, file) => async ({ url }) => {
-    const original = url;
+const checkLink = (cluster, file) => async ({ href }) => {
+    const original = href;
     let error;
 
     // If this is not a fully qualified URL, treat it like a relative path
     // within this directory
-    if (! /^https?:\/\//.test(url))
-        url = githubUrlFromPath(resolvePath(file, url));
+    if (! /^https?:\/\//.test(href))
+        href = githubUrlFromPath(resolvePath(file, href));
 
     // First try puppeteer page nav, which throws if it fails
     try {
-        const response = await cluster.execute(url);
+        const response = await cluster.execute(href);
         return { status: response.status(), original };
     } catch (puppeteerError) {
         // Do nothing, proceed with the fetch test
@@ -134,7 +134,7 @@ const checkLink = (cluster, file) => async ({ url }) => {
 
     // Puppeteer nav can fail for a variety of reasons. Try again with
     // a HEAD check
-    const { status } = await fetch(url, {
+    const { status } = await fetch(href, {
         method: "HEAD",
         headers: {
             // Use headers to pretend to be a normal browser, to prevent false
